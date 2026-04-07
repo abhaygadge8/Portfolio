@@ -115,11 +115,33 @@
     });
   });
 
+  async function submitContactForm(payload) {
+    const endpoint = contactForm?.dataset.endpoint?.trim();
+    if (!endpoint) {
+      throw new Error("Contact form endpoint is not configured yet.");
+    }
+
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "text/plain;charset=utf-8"
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to submit the contact form.");
+    }
+
+    return response.json();
+  }
+
   // Contact form validation and UI feedback.
-  contactForm.addEventListener("submit", (event) => {
+  contactForm.addEventListener("submit", async (event) => {
     event.preventDefault();
 
     const fields = ["name", "email", "subject", "message"].map((id) => document.getElementById(id));
+    const submitButton = contactForm.querySelector('button[type="submit"]');
     let isValid = true;
 
     fields.forEach((field) => {
@@ -146,11 +168,32 @@
       return;
     }
 
-    formStatus.textContent = "Thanks for reaching out. Your message is ready to be sent.";
-    formStatus.classList.remove("text-danger");
-    formStatus.classList.add("text-success");
+    const payload = {
+      name: document.getElementById("name").value.trim(),
+      email: document.getElementById("email").value.trim(),
+      subject: document.getElementById("subject").value.trim(),
+      message: document.getElementById("message").value.trim(),
+      submittedAt: new Date().toISOString()
+    };
 
-    contactForm.reset();
-    fields.forEach((field) => field.classList.remove("is-invalid"));
+    submitButton.disabled = true;
+    formStatus.textContent = "Sending your message...";
+    formStatus.classList.remove("text-danger", "text-success");
+    formStatus.classList.add("text-secondary");
+
+    try {
+      await submitContactForm(payload);
+      formStatus.textContent = "Message sent successfully.";
+      formStatus.classList.remove("text-danger", "text-secondary");
+      formStatus.classList.add("text-success");
+      contactForm.reset();
+      fields.forEach((field) => field.classList.remove("is-invalid"));
+    } catch (error) {
+      formStatus.textContent = error.message || "Unable to send your message right now.";
+      formStatus.classList.remove("text-success", "text-secondary");
+      formStatus.classList.add("text-danger");
+    } finally {
+      submitButton.disabled = false;
+    }
   });
 })();
