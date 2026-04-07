@@ -4,7 +4,9 @@
   const typedPhrases = [
     "Software Engineer",
     "Java Backend Developer",
-    "Problem Solver"
+    "Problem Solver",
+    "Tech Enthusiast",
+    "Programmer"
   ];
 
   const typedElement = document.getElementById("typed-text");
